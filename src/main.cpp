@@ -8,8 +8,8 @@ int main(int argc, char **argv) {
 
   try {
 
-    auto server = std::thread(&user::server::main());
-    auto client = std::thread(&user::client::main());
+    auto server = std::thread([]() { user::server::main(); });
+    auto client = std::thread([]() { user::client::main(); });
 
     server.join();
     client.join();
