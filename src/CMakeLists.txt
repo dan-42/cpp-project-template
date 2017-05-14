@@ -16,14 +16,13 @@ list (INSERT _COMPILE_FLAGS 0
                     -Wall 
                     -Werror
                     -fPIC
-                  #  -Wpedantic
-                    # needed for boost library
-                    -Wno-unused-function 
-                    -Wno-unused-local-typedefs 
-                    -Wno-unused-variable 
-                    -Wno-unused-value                   
-                    -Wno-deprecated-declarations
-                    -Wno-placement-new # needed for gcc6 and boost 1.61 boost.function
+                  
+                   # -Wno-unused-function 
+                   # -Wno-unused-local-typedefs 
+                   # -Wno-unused-variable 
+                   # -Wno-unused-value                   
+                   # -Wno-deprecated-declarations
+                   # -Wno-placement-new # needed for gcc6 and boost 1.61 boost.function
                     )
 
 
@@ -51,8 +50,8 @@ ELSE()
                 -fvisibility=hidden                
                 -ffunction-sections
                 -fdata-sections
-               # -flto 
-               # -fuse-linker-plugin                        
+                -flto 
+                -fuse-linker-plugin                        
         )
 
         
