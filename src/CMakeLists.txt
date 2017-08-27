@@ -80,9 +80,29 @@ include_directories (${Boost_INCLUDE_DIRS})
 add_definitions(-DBOOST_LOG_DYN_LINK)
 
 # pre
-hunter_add_package(lib-cpp-pre)
-find_package(lib-cpp-pre REQUIRED)
-include_directories(AFTER ${LIB_CPP_PRE_INCLUDE_DIRS})
+#hunter_add_package(lib-cpp-pre)
+#find_package(lib-cpp-pre REQUIRED)
+#include_directories(AFTER ${LIB_CPP_PRE_INCLUDE_DIRS})
+
+# openCV
+hunter_add_package(OpenCV)
+find_package(OpenCV REQUIRED)
+
+# Find includes in corresponding build directories
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+# Instruct CMake to run moc automatically when needed.
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+
+hunter_add_package(Qt)
+hunter_add_package(QtCMakeExtra)
+find_package(Qt5Core REQUIRED) 
+find_package(Qt5Widgets REQUIRED)
+
+
+message(INFO "FOOOO ${OPENGL_LIBRARIES}")
+#add_library(GL ALIAS OpenGL)
 
 # Threads
 find_package(Threads)
@@ -91,10 +111,39 @@ find_package(Threads)
 ####
 # Create targets
 file(GLOB_RECURSE _SOURCES_CPP "*.cpp")
+file(GLOB_RECURSE _SOURCES_UI "*.ui")
 
-
+#set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+#set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
 add_definitions(${_COMPILE_FLAGS})
 include_directories(${CMAKE_CURRENT_LIST_DIR})
-add_executable(main ${_SOURCES_CPP})
-target_link_libraries(main ${Boost_LIBRARIES} ${PSAPI_LIBRARIES} pthread)
+add_executable(main ${_SOURCES_CPP} ${_SOURCES_UI})
+#set_target_properties(main PROPERTIES LINK_SEARCH_START_STATIC 1)
+#set_target_properties(main PROPERTIES LINK_SEARCH_END_STATIC 1)
+target_link_libraries(main ${Boost_LIBRARIES} ${PSAPI_LIBRARIES} ${OpenCV_LIBS} pthread Qt5::Widgets Qt5::Core)
+
+
+set(fix_cyclic FALSE)
+if(APPLE)
+  set(fix_cyclic FALSE)
+elseif(CMAKE_COMPILER_IS_GNUCXX)
+  # MinGW included
+  set(fix_cyclic TRUE)
+elseif(NOT UNIX)
+  set(fix_cyclic FALSE)
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  # Linux Clang
+  set(fix_cyclic TRUE)
+endif()
+
+# Workaround for Linux's linker problems (*_MULTIPLICITY doesn't help, TODO) --
+if(fix_cyclic)
+  string(
+      REPLACE
+      "<LINK_LIBRARIES>"
+      " -Wl,--start-group <LINK_LIBRARIES> -Wl,--end-group "
+      CMAKE_CXX_LINK_EXECUTABLE
+      "${CMAKE_CXX_LINK_EXECUTABLE}"
+  )
+endif()
 
