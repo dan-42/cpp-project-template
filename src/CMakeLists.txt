@@ -86,6 +86,22 @@ get_target_property(PUGI_INCLUDE_DIRS pugixml INTERFACE_INCLUDE_DIRECTORIES)
 
 hunter_add_package(nlohmann_json)
 find_package(nlohmann_json CONFIG REQUIRED)
+# openCV
+#hunter_add_package(OpenCV)
+#find_package(OpenCV REQUIRED)
+
+# Find includes in corresponding build directories
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+# Instruct CMake to run moc automatically when needed.
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+
+#hunter_add_package(Qt)
+#hunter_add_package(QtCMakeExtra)
+#find_package(Qt5Core REQUIRED) 
+#find_package(Qt5Widgets REQUIRED)
+
 
 # Threads
 find_package(Threads)
@@ -94,10 +110,40 @@ find_package(Threads)
 ####
 # Create targets
 file(GLOB_RECURSE _SOURCES_CPP "*.cpp")
+file(GLOB_RECURSE _SOURCES_UI "*.ui")
 
-
+#set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+#set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
 add_definitions(${_COMPILE_FLAGS})
 include_directories(${CMAKE_CURRENT_LIST_DIR} ${PUGI_INCLUDE_DIRS})
-add_executable(main ${_SOURCES_CPP})
+add_executable(main ${_SOURCES_CPP} ${_SOURCES_UI})
 target_link_libraries(main ${Boost_LIBRARIES} ${PSAPI_LIBRARIES} pthread pugixml nlohmann_json)
+#set_target_properties(main PROPERTIES LINK_SEARCH_START_STATIC 1)
+#set_target_properties(main PROPERTIES LINK_SEARCH_END_STATIC 1)
+#target_link_libraries(main ${Boost_LIBRARIES} ${PSAPI_LIBRARIES} ${OpenCV_LIBS} pthread Qt5::Widgets Qt5::Core)
+
+
+set(fix_cyclic FALSE)
+if(APPLE)
+  set(fix_cyclic FALSE)
+elseif(CMAKE_COMPILER_IS_GNUCXX)
+  # MinGW included
+  set(fix_cyclic TRUE)
+elseif(NOT UNIX)
+  set(fix_cyclic FALSE)
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  # Linux Clang
+  set(fix_cyclic TRUE)
+endif()
+
+# Workaround for Linux's linker problems (*_MULTIPLICITY doesn't help, TODO) --
+if(fix_cyclic)
+  string(
+      REPLACE
+      "<LINK_LIBRARIES>"
+      " -Wl,--start-group <LINK_LIBRARIES> -Wl,--end-group "
+      CMAKE_CXX_LINK_EXECUTABLE
+      "${CMAKE_CXX_LINK_EXECUTABLE}"
+  )
+endif()
 
