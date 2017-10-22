@@ -12,14 +12,14 @@ ENDIF()
 
 
 list (INSERT _COMPILE_FLAGS 0
-                    -std=c++14 
+                    -std=c++17
                     -Wall 
                     -Werror
                     -fPIC
                   
                    # -Wno-unused-function 
                    # -Wno-unused-local-typedefs 
-                   # -Wno-unused-variable 
+                   -Wno-unused-variable 
                    # -Wno-unused-value                   
                    # -Wno-deprecated-declarations
                    # -Wno-placement-new # needed for gcc6 and boost 1.61 boost.function
@@ -52,9 +52,7 @@ ELSE()
                 -fdata-sections
                 -flto 
                 -fuse-linker-plugin                        
-        )
-
-        
+        )        
         
     endif()
     list(APPEND _COMPILE_FLAGS        
@@ -62,10 +60,6 @@ ELSE()
                 -s                       
         )    
 ENDIF()
-
-
-
-
 
 
 hunter_add_package(Boost COMPONENTS system filesystem)
@@ -80,9 +74,18 @@ include_directories (${Boost_INCLUDE_DIRS})
 add_definitions(-DBOOST_LOG_DYN_LINK)
 
 # pre
-hunter_add_package(lib-cpp-pre)
-find_package(lib-cpp-pre REQUIRED)
-include_directories(AFTER ${LIB_CPP_PRE_INCLUDE_DIRS})
+#hunter_add_package(lib-cpp-pre)
+#find_package(lib-cpp-pre REQUIRED)
+#include_directories(AFTER ${LIB_CPP_PRE_INCLUDE_DIRS})
+
+# download pugixml
+hunter_add_package(pugixml)
+find_package(pugixml CONFIG REQUIRED)
+get_target_property(PUGI_INCLUDE_DIRS pugixml INTERFACE_INCLUDE_DIRECTORIES)
+
+
+hunter_add_package(nlohmann_json)
+find_package(nlohmann_json CONFIG REQUIRED)
 
 # Threads
 find_package(Threads)
@@ -94,7 +97,7 @@ file(GLOB_RECURSE _SOURCES_CPP "*.cpp")
 
 
 add_definitions(${_COMPILE_FLAGS})
-include_directories(${CMAKE_CURRENT_LIST_DIR})
+include_directories(${CMAKE_CURRENT_LIST_DIR} ${PUGI_INCLUDE_DIRS})
 add_executable(main ${_SOURCES_CPP})
-target_link_libraries(main ${Boost_LIBRARIES} ${PSAPI_LIBRARIES} pthread)
+target_link_libraries(main ${Boost_LIBRARIES} ${PSAPI_LIBRARIES} pthread pugixml nlohmann_json)
 
